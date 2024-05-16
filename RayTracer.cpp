@@ -2,8 +2,10 @@
 * COSC 363  Computer Graphics
 * Department of Computer Science and Software Engineering, University of Canterbury.
 *
-* A basic ray tracer
-* See Lab07.pdf   for details.
+* Artemis Hingston
+* irh20
+* Assignment 2
+* See Report   for details.
 *===================================================================================
 */
 #include <iostream>
@@ -89,6 +91,45 @@ glm::vec3 trace(Ray ray, int step)
 	return color;
 }
 
+
+// All the objects and things
+
+void loadTextures() {
+	texture = TextureBMP("../Butterfly.bmp");
+}
+
+
+void loadSpheres() {
+	Sphere *sphere1 = new Sphere(glm::vec3(-5.0, 0.0, -90.0), 15.0);
+	sphere1->setColor(glm::vec3(0, 0, 1));   //Set colour to blue
+	// sphere1->setSpecularity(false);
+	sphere1->setReflectivity(true, 0.8);
+	sceneObjects.push_back(sphere1);		 //Add sphere to scene objects
+
+	Sphere *sphere2 = new Sphere(glm::vec3(10.0, 10.0, -60.0), 3.0);
+	sphere2->setColor(glm::vec3(0, 1, 1));
+	// sphere2->setShininess(5);
+	sceneObjects.push_back(sphere2);
+
+	Sphere *sphere3 = new Sphere(glm::vec3(5.0, 5.0, -70.0), 4.0);
+	sphere3->setColor(glm::vec3(1, 0, 0));
+	sceneObjects.push_back(sphere3);
+
+	Sphere *sphere4 = new Sphere(glm::vec3(5.0, -10.0, -60.0), 5.0);
+	sphere4->setColor(glm::vec3(0, 1, 0));
+	sceneObjects.push_back(sphere4);
+}
+
+void loadTable() {
+	Plane *plane = new Plane(glm::vec3(-20.0, -15.0, -40.0), glm::vec3(20.0, -15.0, -40.0), glm::vec3(20.0, -15.0, -200.0), glm::vec3(-20.0, -15.0, -200.0));
+	plane->setColor(glm::vec3(0.8, 0.8, 0));
+	plane->setSpecularity(false);
+	sceneObjects.push_back(plane);
+}
+
+
+
+
 //---The main display module -----------------------------------------------------------
 // In a ray tracing application, it just displays the ray traced image by drawing
 // each cell as a quad.
@@ -145,31 +186,11 @@ void initialize()
 
     glClearColor(0, 0, 0, 1);
 
-	texture = TextureBMP("../Butterfly.bmp");
+	loadTextures();
 
-	Sphere *sphere1 = new Sphere(glm::vec3(-5.0, 0.0, -90.0), 15.0);
-	sphere1->setColor(glm::vec3(0, 0, 1));   //Set colour to blue
-	// sphere1->setSpecularity(false);
-	sphere1->setReflectivity(true, 0.8);
-	sceneObjects.push_back(sphere1);		 //Add sphere to scene objects
+	loadSpheres();
 
-	Sphere *sphere2 = new Sphere(glm::vec3(10.0, 10.0, -60.0), 3.0);
-	sphere2->setColor(glm::vec3(0, 1, 1));
-	// sphere2->setShininess(5);
-	sceneObjects.push_back(sphere2);
-
-	Sphere *sphere3 = new Sphere(glm::vec3(5.0, 5.0, -70.0), 4.0);
-	sphere3->setColor(glm::vec3(1, 0, 0));
-	sceneObjects.push_back(sphere3);
-
-	Sphere *sphere4 = new Sphere(glm::vec3(5.0, -10.0, -60.0), 5.0);
-	sphere4->setColor(glm::vec3(0, 1, 0));
-	sceneObjects.push_back(sphere4);
-
-	Plane *plane = new Plane(glm::vec3(-20.0, -15.0, -40.0), glm::vec3(20.0, -15.0, -40.0), glm::vec3(20.0, -15.0, -200.0), glm::vec3(-20.0, -15.0, -200.0));
-	plane->setColor(glm::vec3(0.8, 0.8, 0));
-	plane->setSpecularity(false);
-	sceneObjects.push_back(plane);
+	loadTable();
 
 }
 
