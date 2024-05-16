@@ -37,6 +37,10 @@ float Cylinder::intersect(glm::vec3 p0, glm::vec3 dir)
         return -1;
 }
 
+/**
+* Returns the unit normal vector at a given point.
+* Assumption: The input point p lies on the cylinder.
+*/
 glm::vec3 Cylinder::normal(glm::vec3 p)
 {
     glm::vec3 n(p.x - center.x, 0, p.z - center.z);

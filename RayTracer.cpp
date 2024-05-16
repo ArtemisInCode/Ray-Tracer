@@ -40,7 +40,7 @@ vector<SceneObject*> sceneObjects;
 //----------------------------------------------------------------------------------
 glm::vec3 trace(Ray ray, int step)
 {
-	glm::vec3 backgroundCol(0);						//Background colour = (0,0,0)
+	glm::vec3 backgroundCol(0.5);						//Background colour = (0,0,0)
 	glm::vec3 lightPos(10, 40, -3);					//Light's position
 	glm::vec3 color(0);
 	SceneObject* obj;
@@ -48,6 +48,26 @@ glm::vec3 trace(Ray ray, int step)
     ray.closestPt(sceneObjects);					//Compare the ray with all objects in the scene
     if(ray.index == -1) return backgroundCol;		//no intersection
 	obj = sceneObjects[ray.index];					//object on which the closest point of intersection is found
+
+	if (ray.index == 9) {
+		// Stripe pattern
+		int checkWidth = 2;
+		int iz = (ray.hit.z) / checkWidth;
+		int ix = (ray.hit.x) / checkWidth;
+		int j = ix % 2;
+		int k = iz % 2;
+		if (j==k) color = glm::vec3(0, 0, 0);
+		else color = glm::vec3(1, 1, 1);
+		obj->setColor(color);
+
+		// // Texture Mapping
+		// float texcoords = (ray.hit.x - -15.0)/(5.0 - -15.0);	// x1=-15, x2=5
+		// float texcoordt = (ray.hit.z - -160.0)/(-90.0 - -160.0);	// z1=-60, z2=-90
+		// if (texcoords > 0 && texcoords < 1 && texcoordt > 0 && texcoordt < 1) {
+		// 	color = texture.getColorAt(texcoords, texcoordt);
+		// 	obj->setColor(color);
+		// }
+	}
 
 	if (ray.index == 4) {
 		// Stripe pattern
@@ -116,8 +136,9 @@ void loadSpheres() {
 	sphere3->setColor(glm::vec3(1, 0, 0));
 	sceneObjects.push_back(sphere3);
 
-	Cylinder *cylinder1 = new Cylinder(glm::vec3(5.0, -15.0, -140.0), 5.0, 8.0);
-	cylinder1->setColor(glm::vec3(0, 1, 0));
+	Cylinder *cylinder1 = new Cylinder(glm::vec3(-5.0, -15.0, -130.0), 5.0, 8.0);
+	cylinder1->setColor(glm::vec3(0, 0, 0));
+	cylinder1->setReflectivity(true, 1.0);
 	sceneObjects.push_back(cylinder1);
 }
 
@@ -145,6 +166,30 @@ void loadTable() {
 }
 
 void loadChessBoard() {
+	Plane *chessBoard = new Plane(glm::vec3(2.0, -14.0, -102.0), glm::vec3(18.0, -14.0, -102.0), glm::vec3(18.0, -14.0, -118.0), glm::vec3(2.0, -14.0, -118.0));
+	chessBoard->setColor(glm::vec3(1));
+	chessBoard->setSpecularity(false);
+	sceneObjects.push_back(chessBoard);
+
+	Plane *chessBoardSide1 = new Plane(glm::vec3(2.0, -15.0, -102.0), glm::vec3(18.0, -15.0, -102.0), glm::vec3(18.0, -14.0, -102.0), glm::vec3(2.0, -14.0, -102.0));
+	chessBoardSide1->setColor(glm::vec3(0.24, 0.17, 0.12));
+	chessBoardSide1->setSpecularity(false);
+	sceneObjects.push_back(chessBoardSide1);
+
+	Plane *chessBoardSide2 = new Plane(glm::vec3(2.0, -15.0, -118.0), glm::vec3(18.0, -15.0, -118.0), glm::vec3(18.0, -14.0, -118.0), glm::vec3(2.0, -14.0, -118.0));
+	chessBoardSide2->setColor(glm::vec3(0.24, 0.17, 0.12));
+	chessBoardSide2->setSpecularity(false);
+	sceneObjects.push_back(chessBoardSide2);
+
+	Plane *chessBoardSide3 = new Plane(glm::vec3(2.0, -15.0, -102.0), glm::vec3(2.0, -15.0, -118.0), glm::vec3(2.0, -14.0, -118.0), glm::vec3(2.0, -14.0, -102.0));
+	chessBoardSide3->setColor(glm::vec3(0.24, 0.17, 0.12));
+	chessBoardSide3->setSpecularity(false);
+	sceneObjects.push_back(chessBoardSide3);
+
+	Plane *chessBoardSide4 = new Plane(glm::vec3(18.0, -15.0, -118.0), glm::vec3(18.0, -15.0, -102.0), glm::vec3(18.0, -14.0, -102.0), glm::vec3(18.0, -14.0, -118.0));
+	chessBoardSide4->setColor(glm::vec3(0.24, 0.17, 0.12));
+	chessBoardSide4->setSpecularity(false);
+	sceneObjects.push_back(chessBoardSide4);
 
 }
 
@@ -233,13 +278,15 @@ void initialize()
 
 	loadTable();
 
+	loadChessBoard();
+
 }
 
 
 int main(int argc, char *argv[]) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB );
-    glutInitWindowSize(500, 500);
+    glutInitWindowSize(800, 800);
     glutInitWindowPosition(20, 20);
     glutCreateWindow("Raytracing");
 
