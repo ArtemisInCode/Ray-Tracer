@@ -19,7 +19,7 @@ float Sphere::intersect(glm::vec3 p0, glm::vec3 dir)
     float len = glm::length(vdif);
     float c = len*len - radius*radius;
     float delta = b*b - c;
-   
+
 	if(delta < 0.001) return -1.0;    //includes zero and negative values
 
     float t1 = -b - sqrt(delta);

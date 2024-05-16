@@ -16,6 +16,7 @@
 #include "SceneObject.h"
 #include "Ray.h"
 #include "Plane.h"
+#include "Cylinder.h"
 #include "TextureBMP.h"
 #include <GL/freeglut.h>
 using namespace std;
@@ -59,7 +60,7 @@ glm::vec3 trace(Ray ray, int step)
 
 		// Texture Mapping
 		float texcoords = (ray.hit.x - -15.0)/(5.0 - -15.0);	// x1=-15, x2=5
-		float texcoordt = (ray.hit.z - -60.0)/(-90.0 - -60.0);	// z1=-60, z2=-90
+		float texcoordt = (ray.hit.z - -160.0)/(-90.0 - -160.0);	// z1=-60, z2=-90
 		if (texcoords > 0 && texcoords < 1 && texcoordt > 0 && texcoordt < 1) {
 			color = texture.getColorAt(texcoords, texcoordt);
 			obj->setColor(color);
@@ -100,31 +101,71 @@ void loadTextures() {
 
 
 void loadSpheres() {
-	Sphere *sphere1 = new Sphere(glm::vec3(-5.0, 0.0, -90.0), 15.0);
+	Sphere *sphere1 = new Sphere(glm::vec3(-5.0, 0.0, -190.0), 15.0);
 	sphere1->setColor(glm::vec3(0, 0, 1));   //Set colour to blue
 	// sphere1->setSpecularity(false);
 	sphere1->setReflectivity(true, 0.8);
 	sceneObjects.push_back(sphere1);		 //Add sphere to scene objects
 
-	Sphere *sphere2 = new Sphere(glm::vec3(10.0, 10.0, -60.0), 3.0);
+	Sphere *sphere2 = new Sphere(glm::vec3(10.0, 10.0, -160.0), 3.0);
 	sphere2->setColor(glm::vec3(0, 1, 1));
 	// sphere2->setShininess(5);
 	sceneObjects.push_back(sphere2);
 
-	Sphere *sphere3 = new Sphere(glm::vec3(5.0, 5.0, -70.0), 4.0);
+	Sphere *sphere3 = new Sphere(glm::vec3(5.0, 5.0, -170.0), 4.0);
 	sphere3->setColor(glm::vec3(1, 0, 0));
 	sceneObjects.push_back(sphere3);
 
-	Sphere *sphere4 = new Sphere(glm::vec3(5.0, -10.0, -60.0), 5.0);
-	sphere4->setColor(glm::vec3(0, 1, 0));
-	sceneObjects.push_back(sphere4);
+	Cylinder *cylinder1 = new Cylinder(glm::vec3(5.0, -15.0, -140.0), 5.0, 8.0);
+	cylinder1->setColor(glm::vec3(0, 1, 0));
+	sceneObjects.push_back(cylinder1);
 }
 
 void loadTable() {
-	Plane *plane = new Plane(glm::vec3(-20.0, -15.0, -40.0), glm::vec3(20.0, -15.0, -40.0), glm::vec3(20.0, -15.0, -200.0), glm::vec3(-20.0, -15.0, -200.0));
+	Plane *plane = new Plane(glm::vec3(-20.0, -15.0, -100.0), glm::vec3(20.0, -15.0, -100.0), glm::vec3(20.0, -15.0, -200.0), glm::vec3(-20.0, -15.0, -200.0));
 	plane->setColor(glm::vec3(0.8, 0.8, 0));
 	plane->setSpecularity(false);
 	sceneObjects.push_back(plane);
+
+	Cylinder *cylinder2 = new Cylinder(glm::vec3(-18.0, -45.0, -102.0), 2.0, 30.0);
+	cylinder2->setColor(glm::vec3(0, 1, 0));
+	sceneObjects.push_back(cylinder2);
+
+	Cylinder *cylinder3 = new Cylinder(glm::vec3(18.0, -45.0, -102.0), 2.0, 30.0);
+	cylinder3->setColor(glm::vec3(0, 1, 0));
+	sceneObjects.push_back(cylinder3);
+
+	Cylinder *cylinder4 = new Cylinder(glm::vec3(18.0, -45.0, -198.0), 2.0, 30.0);
+	cylinder4->setColor(glm::vec3(0, 1, 0));
+	sceneObjects.push_back(cylinder4);
+
+	Cylinder *cylinder5 = new Cylinder(glm::vec3(-18.0, -45.0, -198.0), 2.0, 30.0);
+	cylinder5->setColor(glm::vec3(0, 1, 0));
+	sceneObjects.push_back(cylinder5);
+}
+
+void loadChessBoard() {
+
+}
+
+void loadMirror() {
+
+}
+
+void loadCupAndSaucer() {
+
+}
+
+void loadHourGlass() {
+	
+}
+
+void loadCrystalBall() {
+
+}
+
+void loadGlobe() {
+
 }
 
 
