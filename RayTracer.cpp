@@ -17,6 +17,7 @@
 #include "Ray.h"
 #include "Plane.h"
 #include "Cylinder.h"
+#include "Cone.h"
 #include "TextureBMP.h"
 #include <GL/freeglut.h>
 using namespace std;
@@ -50,23 +51,17 @@ glm::vec3 trace(Ray ray, int step)
 	obj = sceneObjects[ray.index];					//object on which the closest point of intersection is found
 
 	if (ray.index == 9) {
-		// Stripe pattern
-		int checkWidth = 2;
-		int iz = (ray.hit.z) / checkWidth;
-		int ix = (ray.hit.x) / checkWidth;
-		int j = ix % 2;
-		int k = iz % 2;
-		if (j==k) color = glm::vec3(0, 0, 0);
-		else color = glm::vec3(1, 1, 1);
-		obj->setColor(color);
-
-		// // Texture Mapping
-		// float texcoords = (ray.hit.x - -15.0)/(5.0 - -15.0);	// x1=-15, x2=5
-		// float texcoordt = (ray.hit.z - -160.0)/(-90.0 - -160.0);	// z1=-60, z2=-90
-		// if (texcoords > 0 && texcoords < 1 && texcoordt > 0 && texcoordt < 1) {
-		// 	color = texture.getColorAt(texcoords, texcoordt);
-		// 	obj->setColor(color);
-		// }
+		// Chessboard pattern
+        int squareSize = 2;
+        int ix = floor(ray.hit.x / squareSize);
+        int iz = floor(ray.hit.z / squareSize);
+        
+        if ((ix + iz) % 2 == 0) {
+            color = glm::vec3(0, 0, 0); // Black
+        } else {
+            color = glm::vec3(1, 1, 1); // White
+        }
+        obj->setColor(color);
 	}
 
 	if (ray.index == 4) {
@@ -99,6 +94,7 @@ glm::vec3 trace(Ray ray, int step)
 		color = 0.2f * obj->getColor();
 	}
 
+	// Handle reflection
 	if (obj->isReflective() && step < MAX_STEPS) {
 		float rho = obj->getReflectionCoeff();
 		glm::vec3 normalVec = obj->normal(ray.hit);
@@ -107,6 +103,25 @@ glm::vec3 trace(Ray ray, int step)
 		glm::vec3 reflectedColor = trace(reflectedRay, step + 1);
 		color = color + (rho * reflectedColor);
 	}
+
+	// Handle refraction
+    if (obj->isRefractive() && step < MAX_STEPS) {
+        float eta = obj->getRefractiveIndex();
+        glm::vec3 normalVec = obj->normal(ray.hit);
+        glm::vec3 refractedDir = glm::refract(ray.dir, normalVec, 1.0f / eta);
+        Ray refractedRay(ray.hit, refractedDir);
+        glm::vec3 refractedColor = trace(refractedRay, step + 1);
+        float refrCoeff = obj->getRefractionCoeff();
+        color = color + (refrCoeff * refractedColor);
+    }
+
+    // Handle transparency
+    if (obj->isTransparent() && step < MAX_STEPS) {
+        float tranCoeff = obj->getTransparencyCoeff();
+        Ray transparentRay(ray.hit, ray.dir);
+        glm::vec3 transparentColor = trace(transparentRay, step + 1);
+        color = (1 - tranCoeff) * color + (tranCoeff * transparentColor);
+    }
 
 
 	return color;
@@ -132,9 +147,7 @@ void loadSpheres() {
 	// sphere2->setShininess(5);
 	sceneObjects.push_back(sphere2);
 
-	Sphere *sphere3 = new Sphere(glm::vec3(5.0, 5.0, -170.0), 4.0);
-	sphere3->setColor(glm::vec3(1, 0, 0));
-	sceneObjects.push_back(sphere3);
+	
 
 	Cylinder *cylinder1 = new Cylinder(glm::vec3(-5.0, -15.0, -130.0), 5.0, 8.0);
 	cylinder1->setColor(glm::vec3(0, 0, 0));
@@ -198,11 +211,18 @@ void loadMirror() {
 }
 
 void loadCupAndSaucer() {
-
+	Cylinder *cylinder1 = new Cylinder(glm::vec3(-15.0, -15.0, -115.0), 2.0, 6.0);
+	cylinder1->setColor(glm::vec3(1, 1, 1));
+	cylinder1->setTransparency(true, 0.5);
+	sceneObjects.push_back(cylinder1);
 }
 
+
 void loadHourGlass() {
-	
+	Cone *cone1 = new Cone(glm::vec3(-5.0, -15.0, -115.0), 2.0, 6.0);
+	cone1->setColor(glm::vec3(1, 0, 0));
+	cone1->setTransparency(true, 0.5);
+	sceneObjects.push_back(cone1);
 }
 
 void loadCrystalBall() {
@@ -210,7 +230,10 @@ void loadCrystalBall() {
 }
 
 void loadGlobe() {
-
+	Sphere *sphere1 = new Sphere(glm::vec3(10.0, -10.0, -170.0), 5.0);
+	sphere1->setColor(glm::vec3(0.25, 0.88, 0.82));
+	sphere1->setTransparency(true, 0.5);
+	sceneObjects.push_back(sphere1);
 }
 
 
@@ -274,12 +297,14 @@ void initialize()
 
 	loadTextures();
 
+	loadGlobe();
 	loadSpheres();
 
 	loadTable();
 
 	loadChessBoard();
-
+	loadCupAndSaucer();
+	loadHourGlass();
 }
 
 
