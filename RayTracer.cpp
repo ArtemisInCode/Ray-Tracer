@@ -30,7 +30,18 @@ const float XMAX = 10.0;	// defined so the view axis passes thru centre
 const float YMIN = -10.0;
 const float YMAX = 10.0;
 
+// Box Coords
+glm::vec3 NWTop = glm::vec3(-150.0, 100.0, 40.0);
+glm::vec3 NWBase = glm::vec3(-150.0, -100.0, 40.0);
+glm::vec3 NETop = glm::vec3(150.0, 100.0, 40.0);
+glm::vec3 NEBase = glm::vec3(150.0, -100.0, 40.0);
+glm::vec3 SETop = glm::vec3(150.0, 100.0, -1000.0);
+glm::vec3 SEBase = glm::vec3(150.0, -100.0, -1000.0);
+glm::vec3 SWTop = glm::vec3(-150.0, 100.0, -1000.0);
+glm::vec3 SWBase = glm::vec3(-150.0, -100.0, -1000.0);
+
 TextureBMP texture;
+TextureBMP texId[3];
 
 vector<SceneObject*> sceneObjects;
 
@@ -74,10 +85,30 @@ glm::vec3 trace(Ray ray, int step)
 		obj->setColor(color);
 
 		// Texture Mapping
-		float texcoords = (ray.hit.x - -15.0)/(5.0 - -15.0);	// x1=-15, x2=5
-		float texcoordt = (ray.hit.z - -160.0)/(-90.0 - -160.0);	// z1=-60, z2=-90
+		float texcoords = (ray.hit.x - -20.0)/(20.0 - -20.0);	// x1=-15, x2=5
+		float texcoordt = (ray.hit.z - -200.0)/(-100.0 - -200.0);	// z1=-60, z2=-90
 		if (texcoords > 0 && texcoords < 1 && texcoordt > 0 && texcoordt < 1) {
-			color = texture.getColorAt(texcoords, texcoordt);
+			color = texId[0].getColorAt(texcoords, texcoordt);
+			obj->setColor(color);
+		}
+	}
+
+	if (ray.index == 18) {
+		// Texture Mapping
+		float texcoords = (ray.hit.x - -150.0)/(150.0 - -150.0);	// x1=-15, x2=5
+		float texcoordt = (ray.hit.z - -1000.0)/(40.0 - -1000.0);	// z1=-60, z2=-90
+		if (texcoords > 0 && texcoords < 1 && texcoordt > 0 && texcoordt < 1) {
+			color = texId[1].getColorAt(texcoords, texcoordt);
+			obj->setColor(color);
+		}
+	}
+
+	if (ray.index == 19) {
+		// Texture Mapping
+		float texcoords = (ray.hit.x - -150.0)/(150.0 - -150.0);	// x1=-15, x2=5
+		float texcoordt = (ray.hit.z - -1000.0)/(40.0 - -1000.0);	// z1=-60, z2=-90
+		if (texcoords > 0 && texcoords < 1 && texcoordt > 0 && texcoordt < 1) {
+			color = texId[2].getColorAt(texcoords, texcoordt);
 			obj->setColor(color);
 		}
 	}
@@ -131,7 +162,44 @@ glm::vec3 trace(Ray ray, int step)
 // All the objects and things
 
 void loadTextures() {
-	texture = TextureBMP("../Butterfly.bmp");
+	texId[0] = TextureBMP("../oak.bmp");
+	texId[1] = TextureBMP("../roof.bmp");
+	texId[2] = TextureBMP("../tiles.bmp");
+}
+
+
+void loadWalls() {
+
+	Plane *northWall = new Plane(NWBase, NEBase, NETop, NWTop);
+	northWall->setColor(glm::vec3(1, 0, 0));
+	northWall->setSpecularity(false);
+	sceneObjects.push_back(northWall);
+
+	Plane *southWall = new Plane(SWBase, SEBase, SETop, SWTop);
+	southWall->setColor(glm::vec3(0.89, 1, 0.16));
+	southWall->setSpecularity(false);
+	sceneObjects.push_back(southWall);
+
+	Plane *westWall = new Plane(NWBase, SWBase, SWTop, NWTop);
+	westWall->setColor(glm::vec3(0, 0, 1));
+	westWall->setSpecularity(false);
+	sceneObjects.push_back(westWall);
+
+	Plane *eastWall = new Plane(SEBase, NEBase, NETop, SETop);
+	eastWall->setColor(glm::vec3(1, 0, 1));
+	eastWall->setSpecularity(false);
+	sceneObjects.push_back(eastWall);
+
+	Plane *roof = new Plane(SWTop, SETop, NETop, NWTop);
+	roof->setColor(glm::vec3(0, 1, 1));
+	roof->setSpecularity(false);
+	sceneObjects.push_back(roof);
+
+	Plane *ground = new Plane(NWBase, NEBase, SEBase, SWBase);
+	ground->setColor(glm::vec3(1, 1, 0));
+	ground->setSpecularity(false);
+	sceneObjects.push_back(ground);
+
 }
 
 
@@ -161,20 +229,20 @@ void loadTable() {
 	plane->setSpecularity(false);
 	sceneObjects.push_back(plane);
 
-	Cylinder *cylinder2 = new Cylinder(glm::vec3(-18.0, -45.0, -102.0), 2.0, 30.0);
-	cylinder2->setColor(glm::vec3(0, 1, 0));
+	Cylinder *cylinder2 = new Cylinder(glm::vec3(-15.0, -45.0, -105.0), 1.5, 30.0);
+	cylinder2->setColor(glm::vec3(0.4, 0.26, 0.09));
 	sceneObjects.push_back(cylinder2);
 
-	Cylinder *cylinder3 = new Cylinder(glm::vec3(18.0, -45.0, -102.0), 2.0, 30.0);
-	cylinder3->setColor(glm::vec3(0, 1, 0));
+	Cylinder *cylinder3 = new Cylinder(glm::vec3(15.0, -45.0, -105.0), 1.5, 30.0);
+	cylinder3->setColor(glm::vec3(0.4, 0.26, 0.09));
 	sceneObjects.push_back(cylinder3);
 
-	Cylinder *cylinder4 = new Cylinder(glm::vec3(18.0, -45.0, -198.0), 2.0, 30.0);
-	cylinder4->setColor(glm::vec3(0, 1, 0));
+	Cylinder *cylinder4 = new Cylinder(glm::vec3(15.0, -45.0, -195.0), 1.5, 30.0);
+	cylinder4->setColor(glm::vec3(0.4, 0.26, 0.09));
 	sceneObjects.push_back(cylinder4);
 
-	Cylinder *cylinder5 = new Cylinder(glm::vec3(-18.0, -45.0, -198.0), 2.0, 30.0);
-	cylinder5->setColor(glm::vec3(0, 1, 0));
+	Cylinder *cylinder5 = new Cylinder(glm::vec3(-15.0, -45.0, -195.0), 1.5, 30.0);
+	cylinder5->setColor(glm::vec3(0.4, 0.26, 0.09));
 	sceneObjects.push_back(cylinder5);
 }
 
@@ -303,8 +371,10 @@ void initialize()
 	loadTable();
 
 	loadChessBoard();
+	loadWalls();
 	loadCupAndSaucer();
 	loadHourGlass();
+	
 }
 
 
