@@ -157,7 +157,7 @@ glm::vec3 trace(Ray ray, int step)
             Ray exitRay(refrRay.hit, h);
             glm::vec3 refractedColor = trace(exitRay, step + 1);
             float refrCoeff = obj->getRefractionCoeff();
-            color += refrCoeff * refractedColor;
+            color = color + (refrCoeff * refractedColor);
         }
     }
 
@@ -290,7 +290,7 @@ void loadMirror() {
 	float mirrorHeight = 10.0;
 	float mirrorInset = 1.0;
 	// Plane *mirror = new Plane(glm::vec3(tableMinX+mirrorInset, tableY, tableMinZ+mirrorInset+mirrorHeight), glm::vec3(tableMinX+mirrorInset+mirrorHeight, tableY, tableMinZ+mirrorInset), glm::vec3(tableMinX+mirrorInset+mirrorHeight, tableY+mirrorHeight, tableMinZ+mirrorInset), glm::vec3(tableMinX+mirrorInset, tableY+mirrorHeight, tableMinZ+mirrorInset+mirrorHeight));
-	Plane *mirror = new Plane(glm::vec3(-40.0, -30.0, -300.0), glm::vec3(40.0, -30.0, -300.0), glm::vec3(40.0, 20.0, -300.0), glm::vec3(-40.0, 20.0, -300.0));
+	Plane *mirror = new Plane(glm::vec3(-70.0, -30.0, -250.0), glm::vec3(40.0, -30.0, -300.0), glm::vec3(40.0, 20.0, -300.0), glm::vec3(-70.0, 20.0, -250.0));
 	mirror->setColor(glm::vec3(0.1, 0.1, 0.1));
 	mirror->setReflectivity(true, 1.0);
 	// mirror->setSpecularity(false);
@@ -299,8 +299,8 @@ void loadMirror() {
 }
 
 void loadCupAndSaucer() {
-	Cylinder *cylinder1 = new Cylinder(glm::vec3(-15.0, -15.0, -115.0), 2.0, 6.0);
-	cylinder1->setColor(glm::vec3(1, 1, 1));
+	Cylinder *cylinder1 = new Cylinder(glm::vec3(-15.0, -15.0, -115.0), 3.0, 8.0);
+	cylinder1->setColor(glm::vec3(0.9, 0.9, 1));
 	cylinder1->setTransparency(true, 0.5);
 	sceneObjects.push_back(cylinder1);
 }
@@ -314,14 +314,17 @@ void loadHourGlass() {
 }
 
 void loadCrystalBall() {
-	Sphere *glassSphere = new Sphere(glm::vec3(0.0, -10.0, -120.0), 5.0);
-	glassSphere->setColor(glm::vec3(1.0, 1.0, 1.0));  // White color (glass)
+	Sphere *glassSphere = new Sphere(glm::vec3(0.0, -2.0, -120.0), 5.0);
+	glassSphere->setColor(glm::vec3(1.0, 1.0, 1.0));
     glassSphere->setReflectivity(true, 0.1f);         // Low reflectivity
     glassSphere->setRefractivity(true, 0.9, 1.5);   // High refractivity, with refractive index 1.5
-    glassSphere->setTransparency(true, 0.9);         // High transparency
-	// ball->setShininess(0.2);
-	// ball->setTransparency(true, 0.8);
+    glassSphere->setTransparency(true, 0.8);         // High transparency
 	sceneObjects.push_back(glassSphere);
+
+	Cone *coneBase = new Cone(glm::vec3(0.0, -15.0, -120.0), 5.0, 10.0);
+	coneBase->setColor(glm::vec3(1.0, 0.0, 1.0));
+	// cone1->setTransparency(true, 0.5);
+	sceneObjects.push_back(coneBase);
 }
 
 void loadGlobe() {
@@ -410,7 +413,7 @@ void initialize()
 
 	loadGlobe();
 	loadHourGlass();
-	// loadMirror();
+	loadMirror();
 	loadCupAndSaucer();
 	loadCrystalBall();
 	loadOtherThings();
