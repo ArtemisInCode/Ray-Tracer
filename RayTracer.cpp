@@ -30,6 +30,16 @@ const float XMAX = 10.0;	// defined so the view axis passes thru centre
 const float YMIN = -10.0;
 const float YMAX = 10.0;
 
+const float tableY = -15.0;
+const float tableMinX = -20.0;
+const float tableMaxX = 20.0;
+const float tableMinZ = -200.0;
+const float tableMaxZ = -100.0;
+const float legHeight = 30.0;
+const float legInset = 5.0;
+const float legY = tableY - legHeight;
+
+
 // Box Coords
 glm::vec3 NETop = glm::vec3(-150.0, 100.0, 40.0);
 glm::vec3 NEBase = glm::vec3(-150.0, -100.0, 40.0);
@@ -76,15 +86,7 @@ glm::vec3 trace(Ray ray, int step)
 	}
 
 	if (ray.index == 6) {
-		// Stripe pattern
-		// int stripeWidth = 5;
-		// int iz = (ray.hit.z) / stripeWidth;
-		// int k = iz % 2;
-		// if (k==0) color = glm::vec3(0, 1, 0);
-		// else color = glm::vec3(1, 1, 0.5);
-		// obj->setColor(color);
-
-		// Texture Mapping for Table
+		// Texture Mapping for Table top
 		float texcoords = (ray.hit.x - -20.0)/(20.0 - -20.0);	// x1=-15, x2=5
 		float texcoordt = (ray.hit.z - -200.0)/(-100.0 - -200.0);	// z1=-60, z2=-90
 		if (texcoords > 0 && texcoords < 1 && texcoordt > 0 && texcoordt < 1) {
@@ -103,15 +105,15 @@ glm::vec3 trace(Ray ray, int step)
 		}
 	}
 
-	if (ray.index == 1) {
-		// Texture Mapping for ground
-		float texcoords = (ray.hit.x - -150.0)/(150.0 - -150.0);	// x1=-15, x2=5
-		float texcoordt = (ray.hit.z - -1000.0)/(40.0 - -1000.0);	// z1=-60, z2=-90
-		if (texcoords > 0 && texcoords < 1 && texcoordt > 0 && texcoordt < 1) {
-			color = texId[2].getColorAt(texcoords, texcoordt);
-			obj->setColor(color);
-		}
-	}
+	// if (ray.index == 1) {
+	// 	// Texture Mapping for ground
+	// 	float texcoords = (ray.hit.x - -150.0)/(150.0 - -150.0);	// x1=-15, x2=5
+	// 	float texcoordt = (ray.hit.z - -1000.0)/(40.0 - -1000.0);	// z1=-60, z2=-90
+	// 	if (texcoords > 0 && texcoords < 1 && texcoordt > 0 && texcoordt < 1) {
+	// 		color = texId[2].getColorAt(texcoords, texcoordt);
+	// 		obj->setColor(color);
+	// 	}
+	// }
 
 
 	color = obj->lighting(lightPos ,-ray.dir, ray.hit);		//Object's colour
@@ -126,7 +128,7 @@ glm::vec3 trace(Ray ray, int step)
 	if ((shadowRay.index > -1) && (shadowRay.dist < lightDist)) {
         SceneObject* shadowObj = sceneObjects[shadowRay.index];
         if (shadowObj->isTransparent() || shadowObj->isRefractive()) {
-			color = 0.5f * obj->getColor();
+			color = 0.4f * obj->getColor();	//Lighter for transparent and refractive
         } else {
             color = 0.2f * obj->getColor();
         }
@@ -146,11 +148,17 @@ glm::vec3 trace(Ray ray, int step)
     if (obj->isRefractive() && step < MAX_STEPS) {
         float eta = obj->getRefractiveIndex();
         glm::vec3 normalVec = obj->normal(ray.hit);
-        glm::vec3 refractedDir = glm::refract(ray.dir, normalVec, 1.0f / eta);
-        Ray refractedRay(ray.hit, refractedDir);
-        glm::vec3 refractedColor = trace(refractedRay, step + 1);
-        float refrCoeff = obj->getRefractionCoeff();
-        color = color + (refrCoeff * refractedColor);
+        glm::vec3 g = glm::refract(ray.dir, normalVec, 1.0f / eta);
+        Ray refrRay(ray.hit, g);
+        refrRay.closestPt(sceneObjects);
+        if (refrRay.index != -1) {
+            glm::vec3 m = sceneObjects[refrRay.index]->normal(refrRay.hit);
+            glm::vec3 h = glm::refract(g, -m, eta);
+            Ray exitRay(refrRay.hit, h);
+            glm::vec3 refractedColor = trace(exitRay, step + 1);
+            float refrCoeff = obj->getRefractionCoeff();
+            color += refrCoeff * refractedColor;
+        }
     }
 
     // Handle transparency
@@ -183,7 +191,7 @@ void loadWalls() {
 	sceneObjects.push_back(roof);
 
 	Plane *ground = new Plane(NEBase, NWBase, SWBase, SEBase);
-	ground->setColor(glm::vec3(1, 1, 0));
+	ground->setColor(glm::vec3(0.5, 1, 0.5));
 	ground->setSpecularity(false);
 	sceneObjects.push_back(ground);
 
@@ -210,11 +218,7 @@ void loadWalls() {
 
 
 void loadSpheres() {
-	Sphere *sphere1 = new Sphere(glm::vec3(-5.0, 0.0, -190.0), 15.0);
-	sphere1->setColor(glm::vec3(0, 0, 1));   //Set colour to blue
-	// sphere1->setSpecularity(false);
-	sphere1->setReflectivity(true, 0.8);
-	sceneObjects.push_back(sphere1);		 //Add sphere to scene objects
+			 //Add sphere to scene objects
 
 	Sphere *sphere2 = new Sphere(glm::vec3(10.0, 10.0, -160.0), 3.0);
 	sphere2->setColor(glm::vec3(0, 1, 1));
@@ -230,16 +234,7 @@ void loadSpheres() {
 }
 
 void loadTable() {
-	float tableY = -15.0;
-	float tableMinX = -20.0;
-	float tableMaxX = 20.0;
-	float tableMinZ = -200.0;
-	float tableMaxZ = -100.0;
-	float legHeight = 30.0;
-	float legInset = 5.0;
-	float legY = tableY - legHeight;
 	glm::vec3 tableColour = glm::vec3(0.4, 0.26, 0.09);
-
 
 	Plane *tableTop = new Plane(glm::vec3(tableMinX, tableY, tableMaxZ), glm::vec3(tableMaxX, tableY, tableMaxZ), glm::vec3(tableMaxX, tableY, tableMinZ), glm::vec3(tableMinX, tableY, tableMinZ));
 	tableTop->setColor(glm::vec3(0.8, 0.8, 0));
@@ -254,11 +249,11 @@ void loadTable() {
 	legNW->setColor(tableColour);
 	sceneObjects.push_back(legNW);
 
-	Cylinder *legSW = new Cylinder(glm::vec3(tableMaxX-legInset, legY, tableMinZ-legInset), 1.5, legHeight);
+	Cylinder *legSW = new Cylinder(glm::vec3(tableMaxX-legInset, legY, tableMinZ+legInset), 1.5, legHeight);
 	legSW->setColor(tableColour);
 	sceneObjects.push_back(legSW);
 
-	Cylinder *legSE = new Cylinder(glm::vec3(tableMinX+legInset, legY, tableMinZ-legInset), 1.5, legHeight);
+	Cylinder *legSE = new Cylinder(glm::vec3(tableMinX+legInset, legY, tableMinZ+legInset), 1.5, legHeight);
 	legSE->setColor(tableColour);
 	sceneObjects.push_back(legSE);
 }
@@ -292,7 +287,15 @@ void loadChessBoard() {
 }
 
 void loadMirror() {
-
+	float mirrorHeight = 10.0;
+	float mirrorInset = 1.0;
+	// Plane *mirror = new Plane(glm::vec3(tableMinX+mirrorInset, tableY, tableMinZ+mirrorInset+mirrorHeight), glm::vec3(tableMinX+mirrorInset+mirrorHeight, tableY, tableMinZ+mirrorInset), glm::vec3(tableMinX+mirrorInset+mirrorHeight, tableY+mirrorHeight, tableMinZ+mirrorInset), glm::vec3(tableMinX+mirrorInset, tableY+mirrorHeight, tableMinZ+mirrorInset+mirrorHeight));
+	Plane *mirror = new Plane(glm::vec3(-40.0, -30.0, -300.0), glm::vec3(40.0, -30.0, -300.0), glm::vec3(40.0, 20.0, -300.0), glm::vec3(-40.0, 20.0, -300.0));
+	mirror->setColor(glm::vec3(0.1, 0.1, 0.1));
+	mirror->setReflectivity(true, 1.0);
+	// mirror->setSpecularity(false);
+	sceneObjects.push_back(mirror);
+	
 }
 
 void loadCupAndSaucer() {
@@ -304,14 +307,21 @@ void loadCupAndSaucer() {
 
 
 void loadHourGlass() {
-	Cone *cone1 = new Cone(glm::vec3(-5.0, -15.0, -115.0), 2.0, 6.0);
+	Cone *cone1 = new Cone(glm::vec3(-5.0, -15.0, -150.0), 2.0, 6.0);
 	cone1->setColor(glm::vec3(1, 0, 0));
 	cone1->setTransparency(true, 0.5);
 	sceneObjects.push_back(cone1);
 }
 
 void loadCrystalBall() {
-
+	Sphere *glassSphere = new Sphere(glm::vec3(0.0, -10.0, -120.0), 5.0);
+	glassSphere->setColor(glm::vec3(1.0, 1.0, 1.0));  // White color (glass)
+    glassSphere->setReflectivity(true, 0.1f);         // Low reflectivity
+    glassSphere->setRefractivity(true, 0.9f, 1.5f);   // High refractivity, with refractive index 1.5
+    glassSphere->setTransparency(true, 0.9f);         // High transparency
+	// ball->setShininess(0.2);
+	// ball->setTransparency(true, 0.8);
+	sceneObjects.push_back(glassSphere);
 }
 
 void loadGlobe() {
@@ -319,6 +329,14 @@ void loadGlobe() {
 	sphere1->setColor(glm::vec3(0.25, 0.88, 0.82));
 	sphere1->setTransparency(true, 0.5);
 	sceneObjects.push_back(sphere1);
+}
+
+void loadOtherThings() {
+	Sphere *bigShinySphere = new Sphere(glm::vec3(40.0, -15.0, -350.0), 30.0);
+	bigShinySphere->setColor(glm::vec3(0, 0, 0));
+	// sphere1->setSpecularity(false);
+	bigShinySphere->setReflectivity(true, 0.8);
+	sceneObjects.push_back(bigShinySphere);
 }
 
 
@@ -387,10 +405,12 @@ void initialize()
 	loadChessBoard();
 
 	loadGlobe();
-	loadSpheres();
-
-	loadCupAndSaucer();
 	loadHourGlass();
+	// loadMirror();
+	loadCupAndSaucer();
+	loadCrystalBall();
+	loadOtherThings();
+	// loadSpheres();
 	
 }
 
