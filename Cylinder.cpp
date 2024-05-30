@@ -7,21 +7,21 @@
 -------------------------------------------------------------*/
 
 #include "Cylinder.h"
-#include <math.h>
+#include <cmath>
 
-/**
-* Cylinder's intersection method.  The input is a ray. 
-*/
 float Cylinder::intersect(glm::vec3 p0, glm::vec3 dir)
 {
-    float a = dir.x * dir.x + dir.z * dir.z;
-    float b = 2 * (dir.x * (p0.x - center.x) + dir.z * (p0.z - center.z));
-    float c = (p0.x - center.x) * (p0.x - center.x) + (p0.z - center.z) * (p0.z - center.z) - radius * radius;
+    glm::vec3 d = dir;
+    glm::vec3 vdif = p0 - baseCenter;
+    d.y = 0; // Ignoring y-axis for cylinder body intersection
+    vdif.y = 0;
 
+    float a = glm::dot(d, d);
+    float b = 2 * glm::dot(vdif, d);
+    float c = glm::dot(vdif, vdif) - radius * radius;
     float delta = b * b - 4 * a * c;
 
-    if (delta < 0.001)
-        return -1.0;
+    if (delta < 0) return -1.0;
 
     float t1 = (-b - sqrt(delta)) / (2 * a);
     float t2 = (-b + sqrt(delta)) / (2 * a);
@@ -29,22 +29,17 @@ float Cylinder::intersect(glm::vec3 p0, glm::vec3 dir)
     float y1 = p0.y + t1 * dir.y;
     float y2 = p0.y + t2 * dir.y;
 
-    if (y1 > center.y && y1 < center.y + height && t1 > 0)
+    if (y1 > baseCenter.y && y1 < baseCenter.y + height)
         return t1;
-    else if (y2 > center.y && y2 < center.y + height && t2 > 0)
+    if (y2 > baseCenter.y && y2 < baseCenter.y + height)
         return t2;
-    else
-        return -1;
+    return -1.0;
 }
 
-/**
-* Returns the unit normal vector at a given point.
-* Assumption: The input point p lies on the cylinder.
-*/
 glm::vec3 Cylinder::normal(glm::vec3 p)
 {
-    glm::vec3 n(p.x - center.x, 0, p.z - center.z);
-    n = glm::normalize(n);
-    return n;
+    glm::vec3 n = p - baseCenter;
+    n.y = 0;
+    return glm::normalize(n);
 }
 

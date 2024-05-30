@@ -344,6 +344,10 @@ void loadOtherThings() {
 	Cylinder *tallPole = new Cylinder(glm::vec3(0.0, -50.0, -250.0), 10.0, 100.0);
 	tallPole->setColor(glm::vec3(0.5, 0.5, 0.5));
 	sceneObjects.push_back(tallPole);
+
+	Cylinder *smallCylinder = new Cylinder(glm::vec3(0.0, -7.0, -120.0), 5.0, 2.0);
+	smallCylinder->setColor(glm::vec3(1.0, 0.5, 1.0));
+	sceneObjects.push_back(smallCylinder);
 }
 
 
