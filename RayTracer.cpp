@@ -41,14 +41,14 @@ const float legY = tableY - legHeight;
 
 
 // Box Coords
-glm::vec3 NETop = glm::vec3(-150.0, 100.0, 40.0);
-glm::vec3 NEBase = glm::vec3(-150.0, -100.0, 40.0);
-glm::vec3 NWTop = glm::vec3(150.0, 100.0, 40.0);
-glm::vec3 NWBase = glm::vec3(150.0, -100.0, 40.0);
+glm::vec3 NETop = glm::vec3(-150.0, 100.0, 200.0);
+glm::vec3 NEBase = glm::vec3(-150.0, -50.0, 200.0);
+glm::vec3 NWTop = glm::vec3(150.0, 100.0, 200.0);
+glm::vec3 NWBase = glm::vec3(150.0, -50.0, 200.0);
 glm::vec3 SWTop = glm::vec3(150.0, 100.0, -1000.0);
-glm::vec3 SWBase = glm::vec3(150.0, -100.0, -1000.0);
+glm::vec3 SWBase = glm::vec3(150.0, -50.0, -1000.0);
 glm::vec3 SETop = glm::vec3(-150.0, 100.0, -1000.0);
-glm::vec3 SEBase = glm::vec3(-150.0, -100.0, -1000.0);
+glm::vec3 SEBase = glm::vec3(-150.0, -50.0, -1000.0);
 
 TextureBMP texture;
 TextureBMP texId[3];
@@ -195,7 +195,7 @@ void loadWalls() {
 	ground->setSpecularity(false);
 	sceneObjects.push_back(ground);
 
-	Plane *northWall = new Plane(NEBase, NWBase, NWTop, NETop);
+	Plane *northWall = new Plane(NETop, NWTop, NWBase, NEBase);
 	northWall->setColor(glm::vec3(1, 0, 0));
 	northWall->setSpecularity(false);
 	sceneObjects.push_back(northWall);
@@ -307,9 +307,9 @@ void loadCupAndSaucer() {
 
 
 void loadHourGlass() {
-	Cone *cone1 = new Cone(glm::vec3(-5.0, -15.0, -150.0), 2.0, 6.0);
+	Cone *cone1 = new Cone(glm::vec3(-10.0, -15.0, -150.0), 5.0, 10.0);
 	cone1->setColor(glm::vec3(1, 0, 0));
-	cone1->setTransparency(true, 0.5);
+	// cone1->setTransparency(true, 0.5);
 	sceneObjects.push_back(cone1);
 }
 
@@ -317,8 +317,8 @@ void loadCrystalBall() {
 	Sphere *glassSphere = new Sphere(glm::vec3(0.0, -10.0, -120.0), 5.0);
 	glassSphere->setColor(glm::vec3(1.0, 1.0, 1.0));  // White color (glass)
     glassSphere->setReflectivity(true, 0.1f);         // Low reflectivity
-    glassSphere->setRefractivity(true, 0.9f, 1.5f);   // High refractivity, with refractive index 1.5
-    glassSphere->setTransparency(true, 0.9f);         // High transparency
+    glassSphere->setRefractivity(true, 0.9, 1.5);   // High refractivity, with refractive index 1.5
+    glassSphere->setTransparency(true, 0.9);         // High transparency
 	// ball->setShininess(0.2);
 	// ball->setTransparency(true, 0.8);
 	sceneObjects.push_back(glassSphere);
@@ -332,11 +332,15 @@ void loadGlobe() {
 }
 
 void loadOtherThings() {
-	Sphere *bigShinySphere = new Sphere(glm::vec3(40.0, -15.0, -350.0), 30.0);
+	Sphere *bigShinySphere = new Sphere(glm::vec3(40.0, -15.0, -250.0), 20.0);
 	bigShinySphere->setColor(glm::vec3(0, 0, 0));
 	// sphere1->setSpecularity(false);
 	bigShinySphere->setReflectivity(true, 0.8);
 	sceneObjects.push_back(bigShinySphere);
+
+	Cylinder *tallPole = new Cylinder(glm::vec3(0.0, -50.0, -250.0), 10.0, 100.0);
+	tallPole->setColor(glm::vec3(0.5, 0.5, 0.5));
+	sceneObjects.push_back(tallPole);
 }
 
 
