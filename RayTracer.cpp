@@ -31,14 +31,14 @@ const float YMIN = -10.0;
 const float YMAX = 10.0;
 
 // Box Coords
-glm::vec3 NWTop = glm::vec3(-150.0, 100.0, 40.0);
-glm::vec3 NWBase = glm::vec3(-150.0, -100.0, 40.0);
-glm::vec3 NETop = glm::vec3(150.0, 100.0, 40.0);
-glm::vec3 NEBase = glm::vec3(150.0, -100.0, 40.0);
-glm::vec3 SETop = glm::vec3(150.0, 100.0, -1000.0);
-glm::vec3 SEBase = glm::vec3(150.0, -100.0, -1000.0);
-glm::vec3 SWTop = glm::vec3(-150.0, 100.0, -1000.0);
-glm::vec3 SWBase = glm::vec3(-150.0, -100.0, -1000.0);
+glm::vec3 NETop = glm::vec3(-150.0, 100.0, 40.0);
+glm::vec3 NEBase = glm::vec3(-150.0, -100.0, 40.0);
+glm::vec3 NWTop = glm::vec3(150.0, 100.0, 40.0);
+glm::vec3 NWBase = glm::vec3(150.0, -100.0, 40.0);
+glm::vec3 SWTop = glm::vec3(150.0, 100.0, -1000.0);
+glm::vec3 SWBase = glm::vec3(150.0, -100.0, -1000.0);
+glm::vec3 SETop = glm::vec3(-150.0, 100.0, -1000.0);
+glm::vec3 SEBase = glm::vec3(-150.0, -100.0, -1000.0);
 
 TextureBMP texture;
 TextureBMP texId[3];
@@ -61,7 +61,7 @@ glm::vec3 trace(Ray ray, int step)
     if(ray.index == -1) return backgroundCol;		//no intersection
 	obj = sceneObjects[ray.index];					//object on which the closest point of intersection is found
 
-	if (ray.index == 9) {
+	if (ray.index == 11) {
 		// Chessboard pattern
         int squareSize = 2;
         int ix = floor(ray.hit.x / squareSize);
@@ -75,16 +75,16 @@ glm::vec3 trace(Ray ray, int step)
         obj->setColor(color);
 	}
 
-	if (ray.index == 4) {
+	if (ray.index == 6) {
 		// Stripe pattern
-		int stripeWidth = 5;
-		int iz = (ray.hit.z) / stripeWidth;
-		int k = iz % 2;
-		if (k==0) color = glm::vec3(0, 1, 0);
-		else color = glm::vec3(1, 1, 0.5);
-		obj->setColor(color);
+		// int stripeWidth = 5;
+		// int iz = (ray.hit.z) / stripeWidth;
+		// int k = iz % 2;
+		// if (k==0) color = glm::vec3(0, 1, 0);
+		// else color = glm::vec3(1, 1, 0.5);
+		// obj->setColor(color);
 
-		// Texture Mapping
+		// Texture Mapping for Table
 		float texcoords = (ray.hit.x - -20.0)/(20.0 - -20.0);	// x1=-15, x2=5
 		float texcoordt = (ray.hit.z - -200.0)/(-100.0 - -200.0);	// z1=-60, z2=-90
 		if (texcoords > 0 && texcoords < 1 && texcoordt > 0 && texcoordt < 1) {
@@ -93,8 +93,8 @@ glm::vec3 trace(Ray ray, int step)
 		}
 	}
 
-	if (ray.index == 18) {
-		// Texture Mapping
+	if (ray.index == 0) {
+		// Texture Mapping for roof
 		float texcoords = (ray.hit.x - -150.0)/(150.0 - -150.0);	// x1=-15, x2=5
 		float texcoordt = (ray.hit.z - -1000.0)/(40.0 - -1000.0);	// z1=-60, z2=-90
 		if (texcoords > 0 && texcoords < 1 && texcoordt > 0 && texcoordt < 1) {
@@ -103,8 +103,8 @@ glm::vec3 trace(Ray ray, int step)
 		}
 	}
 
-	if (ray.index == 19) {
-		// Texture Mapping
+	if (ray.index == 1) {
+		// Texture Mapping for ground
 		float texcoords = (ray.hit.x - -150.0)/(150.0 - -150.0);	// x1=-15, x2=5
 		float texcoordt = (ray.hit.z - -1000.0)/(40.0 - -1000.0);	// z1=-60, z2=-90
 		if (texcoords > 0 && texcoords < 1 && texcoordt > 0 && texcoordt < 1) {
@@ -114,16 +114,23 @@ glm::vec3 trace(Ray ray, int step)
 	}
 
 
-	color = obj->lighting(lightPos ,-ray.dir, ray.hit);						//Object's colour
+	color = obj->lighting(lightPos ,-ray.dir, ray.hit);		//Object's colour
 	glm::vec3 lightVec = lightPos - ray.hit;
 	Ray shadowRay(ray.hit, lightVec);
 
 	float lightDist = glm::length(lightVec);
 
+	// Shadows
 	shadowRay.closestPt(sceneObjects);
+
 	if ((shadowRay.index > -1) && (shadowRay.dist < lightDist)) {
-		color = 0.2f * obj->getColor();
-	}
+        SceneObject* shadowObj = sceneObjects[shadowRay.index];
+        if (shadowObj->isTransparent() || shadowObj->isRefractive()) {
+			color = 0.5f * obj->getColor();
+        } else {
+            color = 0.2f * obj->getColor();
+        }
+    }
 
 	// Handle reflection
 	if (obj->isReflective() && step < MAX_STEPS) {
@@ -170,36 +177,35 @@ void loadTextures() {
 
 void loadWalls() {
 
-	Plane *northWall = new Plane(NWBase, NEBase, NETop, NWTop);
-	northWall->setColor(glm::vec3(1, 0, 0));
-	northWall->setSpecularity(false);
-	sceneObjects.push_back(northWall);
-
-	Plane *southWall = new Plane(SWBase, SEBase, SETop, SWTop);
-	southWall->setColor(glm::vec3(0.89, 1, 0.16));
-	southWall->setSpecularity(false);
-	sceneObjects.push_back(southWall);
-
-	Plane *westWall = new Plane(NWBase, SWBase, SWTop, NWTop);
-	westWall->setColor(glm::vec3(0, 0, 1));
-	westWall->setSpecularity(false);
-	sceneObjects.push_back(westWall);
-
-	Plane *eastWall = new Plane(SEBase, NEBase, NETop, SETop);
-	eastWall->setColor(glm::vec3(1, 0, 1));
-	eastWall->setSpecularity(false);
-	sceneObjects.push_back(eastWall);
-
-	Plane *roof = new Plane(SWTop, SETop, NETop, NWTop);
+	Plane *roof = new Plane(SETop, SWTop, NWTop, NETop);
 	roof->setColor(glm::vec3(0, 1, 1));
 	roof->setSpecularity(false);
 	sceneObjects.push_back(roof);
 
-	Plane *ground = new Plane(NWBase, NEBase, SEBase, SWBase);
+	Plane *ground = new Plane(NEBase, NWBase, SWBase, SEBase);
 	ground->setColor(glm::vec3(1, 1, 0));
 	ground->setSpecularity(false);
 	sceneObjects.push_back(ground);
 
+	Plane *northWall = new Plane(NEBase, NWBase, NWTop, NETop);
+	northWall->setColor(glm::vec3(1, 0, 0));
+	northWall->setSpecularity(false);
+	sceneObjects.push_back(northWall);
+
+	Plane *southWall = new Plane(SEBase, SWBase, SWTop, SETop);
+	southWall->setColor(glm::vec3(0.89, 1, 0.16));
+	southWall->setSpecularity(false);
+	sceneObjects.push_back(southWall);
+
+	Plane *westWall = new Plane(SWBase, NWBase, NWTop, SWTop);
+	westWall->setColor(glm::vec3(0, 0, 1));
+	westWall->setSpecularity(false);
+	sceneObjects.push_back(westWall);
+
+	Plane *eastWall = new Plane(NEBase, SEBase, SETop, NETop);
+	eastWall->setColor(glm::vec3(1, 0, 1));
+	eastWall->setSpecularity(false);
+	sceneObjects.push_back(eastWall);
 }
 
 
@@ -224,26 +230,37 @@ void loadSpheres() {
 }
 
 void loadTable() {
-	Plane *plane = new Plane(glm::vec3(-20.0, -15.0, -100.0), glm::vec3(20.0, -15.0, -100.0), glm::vec3(20.0, -15.0, -200.0), glm::vec3(-20.0, -15.0, -200.0));
-	plane->setColor(glm::vec3(0.8, 0.8, 0));
-	plane->setSpecularity(false);
-	sceneObjects.push_back(plane);
+	float tableY = -15.0;
+	float tableMinX = -20.0;
+	float tableMaxX = 20.0;
+	float tableMinZ = -200.0;
+	float tableMaxZ = -100.0;
+	float legHeight = 30.0;
+	float legInset = 5.0;
+	float legY = tableY - legHeight;
+	glm::vec3 tableColour = glm::vec3(0.4, 0.26, 0.09);
 
-	Cylinder *cylinder2 = new Cylinder(glm::vec3(-15.0, -45.0, -105.0), 1.5, 30.0);
-	cylinder2->setColor(glm::vec3(0.4, 0.26, 0.09));
-	sceneObjects.push_back(cylinder2);
 
-	Cylinder *cylinder3 = new Cylinder(glm::vec3(15.0, -45.0, -105.0), 1.5, 30.0);
-	cylinder3->setColor(glm::vec3(0.4, 0.26, 0.09));
-	sceneObjects.push_back(cylinder3);
+	Plane *tableTop = new Plane(glm::vec3(tableMinX, tableY, tableMaxZ), glm::vec3(tableMaxX, tableY, tableMaxZ), glm::vec3(tableMaxX, tableY, tableMinZ), glm::vec3(tableMinX, tableY, tableMinZ));
+	tableTop->setColor(glm::vec3(0.8, 0.8, 0));
+	tableTop->setSpecularity(false);
+	sceneObjects.push_back(tableTop);
 
-	Cylinder *cylinder4 = new Cylinder(glm::vec3(15.0, -45.0, -195.0), 1.5, 30.0);
-	cylinder4->setColor(glm::vec3(0.4, 0.26, 0.09));
-	sceneObjects.push_back(cylinder4);
+	Cylinder *legNE = new Cylinder(glm::vec3(tableMinX+legInset, legY, tableMaxZ-legInset), 1.5, legHeight);
+	legNE->setColor(tableColour);
+	sceneObjects.push_back(legNE);
 
-	Cylinder *cylinder5 = new Cylinder(glm::vec3(-15.0, -45.0, -195.0), 1.5, 30.0);
-	cylinder5->setColor(glm::vec3(0.4, 0.26, 0.09));
-	sceneObjects.push_back(cylinder5);
+	Cylinder *legNW = new Cylinder(glm::vec3(tableMaxX-legInset, legY, tableMaxZ-legInset), 1.5, legHeight);
+	legNW->setColor(tableColour);
+	sceneObjects.push_back(legNW);
+
+	Cylinder *legSW = new Cylinder(glm::vec3(tableMaxX-legInset, legY, tableMinZ-legInset), 1.5, legHeight);
+	legSW->setColor(tableColour);
+	sceneObjects.push_back(legSW);
+
+	Cylinder *legSE = new Cylinder(glm::vec3(tableMinX+legInset, legY, tableMinZ-legInset), 1.5, legHeight);
+	legSE->setColor(tableColour);
+	sceneObjects.push_back(legSE);
 }
 
 void loadChessBoard() {
@@ -365,13 +382,13 @@ void initialize()
 
 	loadTextures();
 
+	loadWalls();
+	loadTable();
+	loadChessBoard();
+
 	loadGlobe();
 	loadSpheres();
 
-	loadTable();
-
-	loadChessBoard();
-	loadWalls();
 	loadCupAndSaucer();
 	loadHourGlass();
 	
