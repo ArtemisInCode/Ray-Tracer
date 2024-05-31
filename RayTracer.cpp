@@ -105,6 +105,17 @@ glm::vec3 trace(Ray ray, int step)
 		}
 	}
 
+	if (ray.index == 16) {
+		//Texture mapping for globe
+		glm::vec3 normalisedVec = obj->normal(ray.hit);
+		float texcoords = 0.5 + (std::atan2(normalisedVec.z, normalisedVec.x))/(2*M_PI);
+		float texcoordt = 0.5 + (std::asin(normalisedVec.y)/(M_PI));
+		color = texId[2].getColorAt(texcoords, texcoordt);
+			obj->setColor(color);
+
+
+	}
+
 	// if (ray.index == 1) {
 	// 	// Texture Mapping for ground
 	// 	float texcoords = (ray.hit.x - -150.0)/(150.0 - -150.0);	// x1=-15, x2=5
@@ -123,6 +134,7 @@ glm::vec3 trace(Ray ray, int step)
 	float lightDist = glm::length(lightVec);
 
 	// Shadows
+	//TODO Loop to get mult random lights & then average
 	shadowRay.closestPt(sceneObjects);
 
 	if ((shadowRay.index > -1) && (shadowRay.dist < lightDist)) {
@@ -157,7 +169,7 @@ glm::vec3 trace(Ray ray, int step)
             Ray exitRay(refrRay.hit, h);
             glm::vec3 refractedColor = trace(exitRay, step + 1);
             float refrCoeff = obj->getRefractionCoeff();
-            color = color + (refrCoeff * refractedColor);
+            color = (1 - refrCoeff) * color + (refrCoeff * refractedColor);
         }
     }
 
@@ -179,7 +191,7 @@ glm::vec3 trace(Ray ray, int step)
 void loadTextures() {
 	texId[0] = TextureBMP("../oak.bmp");
 	texId[1] = TextureBMP("../roof.bmp");
-	texId[2] = TextureBMP("../tiles.bmp");
+	texId[2] = TextureBMP("../Earth.bmp");
 }
 
 
@@ -287,10 +299,7 @@ void loadChessBoard() {
 }
 
 void loadMirror() {
-	float mirrorHeight = 10.0;
-	float mirrorInset = 1.0;
-	// Plane *mirror = new Plane(glm::vec3(tableMinX+mirrorInset, tableY, tableMinZ+mirrorInset+mirrorHeight), glm::vec3(tableMinX+mirrorInset+mirrorHeight, tableY, tableMinZ+mirrorInset), glm::vec3(tableMinX+mirrorInset+mirrorHeight, tableY+mirrorHeight, tableMinZ+mirrorInset), glm::vec3(tableMinX+mirrorInset, tableY+mirrorHeight, tableMinZ+mirrorInset+mirrorHeight));
-	Plane *mirror = new Plane(glm::vec3(-70.0, -30.0, -250.0), glm::vec3(40.0, -30.0, -300.0), glm::vec3(40.0, 20.0, -300.0), glm::vec3(-70.0, 20.0, -250.0));
+	Plane *mirror = new Plane(glm::vec3(-60.0, -20.0, -250.0), glm::vec3(30.0, -20.0, -300.0), glm::vec3(30.0, 25.0, -290.0), glm::vec3(-60.0, 25.0, -240.0));
 	mirror->setColor(glm::vec3(0.1, 0.1, 0.1));
 	mirror->setReflectivity(true, 1.0);
 	// mirror->setSpecularity(false);
@@ -299,7 +308,7 @@ void loadMirror() {
 }
 
 void loadCupAndSaucer() {
-	Cylinder *cylinder1 = new Cylinder(glm::vec3(-15.0, -15.0, -115.0), 3.0, 8.0);
+	Cylinder *cylinder1 = new Cylinder(glm::vec3(-0.0, -15.0, -125.0), 3.0, 8.0);
 	cylinder1->setColor(glm::vec3(0.9, 0.9, 1));
 	cylinder1->setTransparency(true, 0.5);
 	sceneObjects.push_back(cylinder1);
@@ -314,14 +323,14 @@ void loadHourGlass() {
 }
 
 void loadCrystalBall() {
-	Sphere *glassSphere = new Sphere(glm::vec3(0.0, -2.0, -120.0), 5.0);
-	glassSphere->setColor(glm::vec3(1.0, 1.0, 1.0));
+	Sphere *glassSphere = new Sphere(glm::vec3(-15.0, -2.0, -115.0), 5.0);
+	glassSphere->setColor(glm::vec3(0.0, 0.0, 0.0));
     glassSphere->setReflectivity(true, 0.1f);         // Low reflectivity
-    glassSphere->setRefractivity(true, 0.9, 1.5);   // High refractivity, with refractive index 1.5
-    glassSphere->setTransparency(true, 0.8);         // High transparency
+    glassSphere->setRefractivity(true, 1.0, 1.5);   // High refractivity, with refractive index 1.5
+    // glassSphere->setTransparency(true, 0.8);         // High transparency
 	sceneObjects.push_back(glassSphere);
 
-	Cone *coneBase = new Cone(glm::vec3(0.0, -15.0, -120.0), 5.0, 10.0);
+	Cone *coneBase = new Cone(glm::vec3(-15.0, -15.0, -115.0), 5.0, 10.0);
 	coneBase->setColor(glm::vec3(1.0, 0.0, 1.0));
 	// cone1->setTransparency(true, 0.5);
 	sceneObjects.push_back(coneBase);
@@ -330,22 +339,22 @@ void loadCrystalBall() {
 void loadGlobe() {
 	Sphere *sphere1 = new Sphere(glm::vec3(10.0, -10.0, -170.0), 5.0);
 	sphere1->setColor(glm::vec3(0.25, 0.88, 0.82));
-	sphere1->setTransparency(true, 0.5);
+	// sphere1->setTransparency(true, 0.5);
 	sceneObjects.push_back(sphere1);
 }
 
 void loadOtherThings() {
-	Sphere *bigShinySphere = new Sphere(glm::vec3(40.0, -15.0, -250.0), 20.0);
+	Sphere *bigShinySphere = new Sphere(glm::vec3(40.0, -15.0, -240.0), 20.0);
 	bigShinySphere->setColor(glm::vec3(0, 0, 0));
 	// sphere1->setSpecularity(false);
 	bigShinySphere->setReflectivity(true, 0.8);
 	sceneObjects.push_back(bigShinySphere);
 
-	Cylinder *tallPole = new Cylinder(glm::vec3(0.0, -50.0, -250.0), 10.0, 100.0);
-	tallPole->setColor(glm::vec3(0.5, 0.5, 0.5));
-	sceneObjects.push_back(tallPole);
+	// Cylinder *tallPole = new Cylinder(glm::vec3(0.0, -50.0, -250.0), 10.0, 100.0);
+	// tallPole->setColor(glm::vec3(0.5, 0.5, 0.5));
+	// sceneObjects.push_back(tallPole);
 
-	Cylinder *smallCylinder = new Cylinder(glm::vec3(0.0, -7.0, -120.0), 5.0, 2.0);
+	Cylinder *smallCylinder = new Cylinder(glm::vec3(-15.0, -7.0, -115.0), 5.0, 2.0);
 	smallCylinder->setColor(glm::vec3(1.0, 0.5, 1.0));
 	sceneObjects.push_back(smallCylinder);
 }
@@ -377,11 +386,31 @@ void display()
 		{
 			yp = YMIN + j * cellY;
 
-			glm::vec3 dir(xp + 0.5 * cellX, yp + 0.5 * cellY, -EDIST);	//direction of the primary ray
+			// glm::vec3 dir(xp + 0.5 * cellX, yp + 0.5 * cellY, -EDIST);	//direction of the primary ray
+			// //TODO for loop here with 4 rays & average
+			// Ray ray = Ray(eye, dir);
+			glm::vec3 dir1(xp + 0.25 * cellX, yp + 0.25 * cellY, -EDIST);
+			Ray ray1 = Ray(eye, dir1);
+			glm::vec3 col1 = trace(ray1, 1); //Trace the primary ray and get the colour value
 
-			Ray ray = Ray(eye, dir);
+			glm::vec3 dir2(xp + 0.25 * cellX, yp + 0.75 * cellY, -EDIST);
+			Ray ray2 = Ray(eye, dir1);
+			glm::vec3 col2 = trace(ray2, 1);
 
-			glm::vec3 col = trace(ray, 1); //Trace the primary ray and get the colour value
+			glm::vec3 dir3(xp + 0.75 * cellX, yp + 0.25 * cellY, -EDIST);
+			Ray ray3 = Ray(eye, dir1);
+			glm::vec3 col3 = trace(ray3, 1);
+
+			glm::vec3 dir4(xp + 0.75 * cellX, yp + 0.75 * cellY, -EDIST);
+			Ray ray4 = Ray(eye, dir4);
+			glm::vec3 col4 = trace(ray4, 1);
+
+			float avgR = (col1.r+col2.r+col3.r+col4.r)/4.0f;
+			float avgG = (col1.g+col2.g+col3.g+col4.g)/4.0f;
+			float avgB = (col1.b+col2.b+col3.b+col4.b)/4.0f;
+
+			glm::vec3 col(avgR, avgG, avgB);
+
 			glColor3f(col.r, col.g, col.b);
 			glVertex2f(xp, yp);				//Draw each cell with its color value
 			glVertex2f(xp + cellX, yp);
@@ -414,8 +443,8 @@ void initialize()
 	loadWalls();
 	loadTable();
 	loadChessBoard();
-
 	loadGlobe();
+
 	loadHourGlass();
 	loadMirror();
 	loadCupAndSaucer();
