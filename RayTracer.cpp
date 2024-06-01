@@ -22,6 +22,11 @@
 #include <GL/freeglut.h>
 using namespace std;
 
+// Parameters for testing
+const bool yesRecursion = false;
+const float numRecursions = 3.0;
+
+
 const float EDIST = 40.0; 	// Dist of image plane from camera
 const int NUMDIV = 500;		// Subdivisions along x & y
 const int MAX_STEPS = 5;	// levels of recursion
@@ -360,6 +365,43 @@ void loadOtherThings() {
 }
 
 
+// Function to compute the color difference between two colors
+float colorDifference(const glm::vec3& col1, const glm::vec3& col2) {
+    return glm::length(col1 - col2);
+}
+
+// Recursive adaptive sampling function
+glm::vec3 adaptiveSample(float xp, float yp, float cellX, float cellY, int depth, float threshold, glm::vec3 eye) {
+    if (depth == 0) {
+        glm::vec3 dir(xp + 0.5f * cellX, yp + 0.5f * cellY, -EDIST);
+        Ray ray(eye, dir);
+        return trace(ray, 1);
+    }
+
+    // Sample four corners of the pixel
+    glm::vec3 colors[4];
+    colors[0] = adaptiveSample(xp, yp, cellX / 2, cellY / 2, depth - 1, threshold, eye);
+    colors[1] = adaptiveSample(xp + cellX / 2, yp, cellX / 2, cellY / 2, depth - 1, threshold, eye);
+    colors[2] = adaptiveSample(xp, yp + cellY / 2, cellX / 2, cellY / 2, depth - 1, threshold, eye);
+    colors[3] = adaptiveSample(xp + cellX / 2, yp + cellY / 2, cellX / 2, cellY / 2, depth - 1, threshold, eye);
+
+    // Compute the average color
+    glm::vec3 avgColor = (colors[0] + colors[1] + colors[2] + colors[3]) / 4.0f;
+
+    // Check if the color difference exceeds the threshold
+    if (colorDifference(colors[0], avgColor) > threshold ||
+        colorDifference(colors[1], avgColor) > threshold ||
+        colorDifference(colors[2], avgColor) > threshold ||
+        colorDifference(colors[3], avgColor) > threshold) {
+        // Subdivide further
+        avgColor = (adaptiveSample(xp, yp, cellX / 2, cellY / 2, depth - 1, threshold, eye) +
+                    adaptiveSample(xp + cellX / 2, yp, cellX / 2, cellY / 2, depth - 1, threshold, eye) +
+                    adaptiveSample(xp, yp + cellY / 2, cellX / 2, cellY / 2, depth - 1, threshold, eye) +
+                    adaptiveSample(xp + cellX / 2, yp + cellY / 2, cellX / 2, cellY / 2, depth - 1, threshold, eye)) / 4.0f;
+    }
+
+    return avgColor;
+}
 
 
 //---The main display module -----------------------------------------------------------
@@ -385,34 +427,20 @@ void display()
 		for (int j = 0; j < NUMDIV; j++)
 		{
 			yp = YMIN + j * cellY;
+			glm::vec3 col(0);
 
-			// glm::vec3 dir(xp + 0.5 * cellX, yp + 0.5 * cellY, -EDIST);	//direction of the primary ray
-			// //TODO for loop here with 4 rays & average
-			// Ray ray = Ray(eye, dir);
-			glm::vec3 dir1(xp + 0.25 * cellX, yp + 0.25 * cellY, -EDIST);
-			Ray ray1 = Ray(eye, dir1);
-			glm::vec3 col1 = trace(ray1, 1); //Trace the primary ray and get the colour value
-
-			glm::vec3 dir2(xp + 0.25 * cellX, yp + 0.75 * cellY, -EDIST);
-			Ray ray2 = Ray(eye, dir1);
-			glm::vec3 col2 = trace(ray2, 1);
-
-			glm::vec3 dir3(xp + 0.75 * cellX, yp + 0.25 * cellY, -EDIST);
-			Ray ray3 = Ray(eye, dir1);
-			glm::vec3 col3 = trace(ray3, 1);
-
-			glm::vec3 dir4(xp + 0.75 * cellX, yp + 0.75 * cellY, -EDIST);
-			Ray ray4 = Ray(eye, dir4);
-			glm::vec3 col4 = trace(ray4, 1);
-
-			float avgR = (col1.r+col2.r+col3.r+col4.r)/4.0f;
-			float avgG = (col1.g+col2.g+col3.g+col4.g)/4.0f;
-			float avgB = (col1.b+col2.b+col3.b+col4.b)/4.0f;
-
-			glm::vec3 col(avgR, avgG, avgB);
+			if (!yesRecursion) {
+				// No anti-aliasing
+				glm::vec3 dir(xp + 0.5 * cellX, yp + 0.5 * cellY, -EDIST);	//direction of the primary ray
+				Ray ray = Ray(eye, dir);
+				col += trace(ray, 1); //Trace the primary ray and get the colour value
+			} else {
+				// Adaptive anti-aliasing
+            	col += adaptiveSample(xp, yp, cellX, cellY, numRecursions, 0.1f, eye);
+			}
 
 			glColor3f(col.r, col.g, col.b);
-			glVertex2f(xp, yp);				//Draw each cell with its color value
+			glVertex2f(xp, yp);			//Draw each cell with its color value
 			glVertex2f(xp + cellX, yp);
 			glVertex2f(xp + cellX, yp + cellY);
 			glVertex2f(xp, yp + cellY);
