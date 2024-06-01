@@ -20,11 +20,13 @@
 #include "Cone.h"
 #include "TextureBMP.h"
 #include <GL/freeglut.h>
+#include <glm/gtc/random.hpp>
 using namespace std;
 
 // Parameters for testing
 const bool yesRecursion = false;
 const float numRecursions = 3.0;
+const float yesFog = false;
 
 
 const float EDIST = 40.0; 	// Dist of image plane from camera
@@ -117,9 +119,17 @@ glm::vec3 trace(Ray ray, int step)
 		float texcoordt = 0.5 + (std::asin(normalisedVec.y)/(M_PI));
 		color = texId[2].getColorAt(texcoords, texcoordt);
 			obj->setColor(color);
-
-
 	}
+
+	if (ray.index == 17) {
+		//Texture mapping for cylinder
+		glm::vec3 normalisedVec = obj->normal(ray.hit);
+		float texcoords = 0.5 + (std::atan2(normalisedVec.z, normalisedVec.x))/(2*M_PI);
+		float texcoordt = (ray.hit.y - -15.0)/(-7.0 - -15.0);
+		color = texId[1].getColorAt(texcoords, texcoordt);
+			obj->setColor(color);
+	}
+
 
 	// if (ray.index == 1) {
 	// 	// Texture Mapping for ground
@@ -140,6 +150,9 @@ glm::vec3 trace(Ray ray, int step)
 
 	// Shadows
 	//TODO Loop to get mult random lights & then average
+
+	// loop thru 20ish times 
+
 	shadowRay.closestPt(sceneObjects);
 
 	if ((shadowRay.index > -1) && (shadowRay.dist < lightDist)) {
@@ -186,6 +199,12 @@ glm::vec3 trace(Ray ray, int step)
         color = (1 - tranCoeff) * color + (tranCoeff * transparentColor);
     }
 
+	if (yesFog == true) {
+		float z1 = -40;
+		float z2 = -900;
+		float gamma = ((ray.hit.z)-z1)/(z2-z1);
+		color = (1-gamma)*color + gamma +  glm::vec3(0, 0, 0);
+	}
 
 	return color;
 }
@@ -234,21 +253,6 @@ void loadWalls() {
 }
 
 
-void loadSpheres() {
-			 //Add sphere to scene objects
-
-	Sphere *sphere2 = new Sphere(glm::vec3(10.0, 10.0, -160.0), 3.0);
-	sphere2->setColor(glm::vec3(0, 1, 1));
-	// sphere2->setShininess(5);
-	sceneObjects.push_back(sphere2);
-
-	
-
-	Cylinder *cylinder1 = new Cylinder(glm::vec3(-5.0, -15.0, -130.0), 5.0, 8.0);
-	cylinder1->setColor(glm::vec3(0, 0, 0));
-	cylinder1->setReflectivity(true, 1.0);
-	sceneObjects.push_back(cylinder1);
-}
 
 void loadTable() {
 	glm::vec3 tableColour = glm::vec3(0.4, 0.26, 0.09);
@@ -313,10 +317,43 @@ void loadMirror() {
 }
 
 void loadCupAndSaucer() {
-	Cylinder *cylinder1 = new Cylinder(glm::vec3(-0.0, -15.0, -125.0), 3.0, 8.0);
+	Cylinder *cylinder1 = new Cylinder(glm::vec3(-5.0, -15.0, -115.0), 2.0, 5.0);
 	cylinder1->setColor(glm::vec3(0.9, 0.9, 1));
 	cylinder1->setTransparency(true, 0.5);
 	sceneObjects.push_back(cylinder1);
+
+	Cylinder *checker1 = new Cylinder(glm::vec3(15.0, -14.0, -104.0), 1.0, 1.0);
+	checker1->setColor(glm::vec3(0.6, 0.2, 6));
+	// cylinder1->setTransparency(true, 0.5);
+	sceneObjects.push_back(checker1);
+
+	Cylinder *checker2 = new Cylinder(glm::vec3(11.0, -14.0, -108.0), 1.0, 1.0);
+	checker2->setColor(glm::vec3(0.9, 0.3, 0.6));
+	// cylinder1->setTransparency(true, 0.5);
+	sceneObjects.push_back(checker2);
+
+	Cylinder *checker3 = new Cylinder(glm::vec3(9.0, -14.0, -112.0), 1.0, 1.0);
+	checker3->setColor(glm::vec3(0.9, 0.3, 0.6));
+	// cylinder1->setTransparency(true, 0.5);
+	sceneObjects.push_back(checker3);
+
+	Cylinder *checker4 = new Cylinder(glm::vec3(5.0, -14.0, -106.0), 1.0, 1.0);
+	checker4->setColor(glm::vec3(0.6, 0.2, 6));
+	// cylinder1->setTransparency(true, 0.5);
+	sceneObjects.push_back(checker4);
+
+	// Cone *coneBase = new Cone(glm::vec3(0.0, -10.0, -115.0), 5.0, 10.0);
+	// coneBase->setColor(glm::vec3(1.0, 1.0, 1.0));
+	// coneBase->setTransparency(true, 0.8);
+	// sceneObjects.push_back(coneBase);
+
+	// Sphere *ball1 = new Sphere(glm::vec3(1.0, -5.0, -115.0), 1.0);
+	// ball1->setColor(glm::vec3(1.0, 0.0, 1.0));
+	// sceneObjects.push_back(ball1);
+
+	// Sphere *ball2 = new Sphere(glm::vec3(-2.0, -3.0, -117.0), 2.0);
+	// ball2->setColor(glm::vec3(0.0, 0.0, 1.0));
+	// sceneObjects.push_back(ball2);
 }
 
 
@@ -328,24 +365,30 @@ void loadHourGlass() {
 }
 
 void loadCrystalBall() {
-	Sphere *glassSphere = new Sphere(glm::vec3(-15.0, -2.0, -115.0), 5.0);
+	Sphere *glassSphere = new Sphere(glm::vec3(-15.0, -2.0, -150.0), 5.0);
 	glassSphere->setColor(glm::vec3(0.0, 0.0, 0.0));
     glassSphere->setReflectivity(true, 0.1f);         // Low reflectivity
     glassSphere->setRefractivity(true, 1.0, 1.5);   // High refractivity, with refractive index 1.5
     // glassSphere->setTransparency(true, 0.8);         // High transparency
 	sceneObjects.push_back(glassSphere);
 
-	Cone *coneBase = new Cone(glm::vec3(-15.0, -15.0, -115.0), 5.0, 10.0);
+	Cone *coneBase = new Cone(glm::vec3(-15.0, -15.0, -150.0), 5.0, 10.0);
 	coneBase->setColor(glm::vec3(1.0, 0.0, 1.0));
-	// cone1->setTransparency(true, 0.5);
+	// coneBase->setTransparency(true, 0.9);
 	sceneObjects.push_back(coneBase);
 }
 
+
+
 void loadGlobe() {
-	Sphere *sphere1 = new Sphere(glm::vec3(10.0, -10.0, -170.0), 5.0);
+	Sphere *sphere1 = new Sphere(glm::vec3(10.0, -5.0, -190.0), 5.0);
 	sphere1->setColor(glm::vec3(0.25, 0.88, 0.82));
 	// sphere1->setTransparency(true, 0.5);
 	sceneObjects.push_back(sphere1);
+
+	Cylinder *cylinder = new Cylinder(glm::vec3(10.0, -15.0, -190.0), 5.0, 5.0);
+	cylinder->setColor(glm::vec3(0, 0, 0));
+	sceneObjects.push_back(cylinder);
 }
 
 void loadOtherThings() {
@@ -359,7 +402,7 @@ void loadOtherThings() {
 	// tallPole->setColor(glm::vec3(0.5, 0.5, 0.5));
 	// sceneObjects.push_back(tallPole);
 
-	Cylinder *smallCylinder = new Cylinder(glm::vec3(-15.0, -7.0, -115.0), 5.0, 2.0);
+	Cylinder *smallCylinder = new Cylinder(glm::vec3(-15.0, -7.0, -150.0), 5.0, 2.0);
 	smallCylinder->setColor(glm::vec3(1.0, 0.5, 1.0));
 	sceneObjects.push_back(smallCylinder);
 }
@@ -473,9 +516,9 @@ void initialize()
 	loadChessBoard();
 	loadGlobe();
 
-	loadHourGlass();
-	loadMirror();
 	loadCupAndSaucer();
+	// loadHourGlass();
+	loadMirror();
 	loadCrystalBall();
 	loadOtherThings();
 	// loadSpheres();
