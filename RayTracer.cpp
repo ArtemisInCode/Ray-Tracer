@@ -24,9 +24,13 @@
 using namespace std;
 
 // Parameters for testing
-const bool yesRecursion = false;
+const bool yesRecursion = true;
 const float numRecursions = 3.0;
-const float yesFog = false;
+const float colorThreshold = 0.1;
+const bool yesFog = false;
+const bool yesSoftShad = true;
+const float lightR = 4.0;
+const float numRandLight = 20.0;
 
 
 const float EDIST = 40.0; 	// Dist of image plane from camera
@@ -40,7 +44,7 @@ const float YMAX = 10.0;
 const float tableY = -15.0;
 const float tableMinX = -20.0;
 const float tableMaxX = 20.0;
-const float tableMinZ = -200.0;
+const float tableMinZ = -150.0;
 const float tableMaxZ = -100.0;
 const float legHeight = 30.0;
 const float legInset = 5.0;
@@ -69,7 +73,7 @@ vector<SceneObject*> sceneObjects;
 //----------------------------------------------------------------------------------
 glm::vec3 trace(Ray ray, int step)
 {
-	glm::vec3 backgroundCol(0.5);						//Background colour = (0,0,0)
+	glm::vec3 backgroundCol(0.5);					//Background colour = (0,0,0)
 	glm::vec3 lightPos(10, 40, -3);					//Light's position
 	glm::vec3 color(0);
 	SceneObject* obj;
@@ -142,17 +146,23 @@ glm::vec3 trace(Ray ray, int step)
 	// }
 
 
+	// color = obj->lighting(lightPos ,-ray.dir, ray.hit);		//Object's colour
+	
+
+
+	// Shadows
+
+
+
+
+
+
+// Normal shadows
+	if (!yesSoftShad) {
 	color = obj->lighting(lightPos ,-ray.dir, ray.hit);		//Object's colour
 	glm::vec3 lightVec = lightPos - ray.hit;
 	Ray shadowRay(ray.hit, lightVec);
-
 	float lightDist = glm::length(lightVec);
-
-	// Shadows
-	//TODO Loop to get mult random lights & then average
-
-	// loop thru 20ish times 
-
 	shadowRay.closestPt(sceneObjects);
 
 	if ((shadowRay.index > -1) && (shadowRay.dist < lightDist)) {
@@ -162,7 +172,114 @@ glm::vec3 trace(Ray ray, int step)
         } else {
             color = 0.2f * obj->getColor();
         }
-    }
+    }} else {
+		// Attempt soft shadows
+
+		// if (obj != nullptr) {
+		// 	glm::vec3 color = obj->lighting(lightPos, -ray.dir, ray.hit); // Object's color
+		// 	glm::vec3 lightVec = lightPos - ray.hit;
+		// 	float lightDist = glm::length(lightVec);
+
+		// 	glm::vec3 softShadowColor(0.0f);
+		// 	int numShadowRays = 20; // Number of samples for soft shadows
+		// 	float lightRadius = 0.5f; // Radius of the area light source
+
+		// 	for (int i = 0; i < numShadowRays; ++i) {
+		// 		glm::vec2 rvec = glm::diskRand(lightRadius);
+		// 		glm::vec3 jitteredLightPos = lightPos + glm::vec3(rvec.x, 0, rvec.y);
+		// 		glm::vec3 jitteredLightVec = jitteredLightPos - ray.hit;
+		// 		Ray shadowRay(ray.hit, jitteredLightVec);
+		// 		shadowRay.closestPt(sceneObjects);
+
+		// 		if ((shadowRay.index > -1) && (shadowRay.dist < glm::length(jitteredLightVec))) {
+		// 			SceneObject* shadowObj = sceneObjects[shadowRay.index];
+		// 			if (shadowObj->isTransparent() || shadowObj->isRefractive()) {
+		// 				softShadowColor += 0.4f * obj->getColor(); // Lighter for transparent and refractive objects
+		// 			} else {
+		// 				softShadowColor += 0.2f * obj->getColor(); // Darker for opaque objects
+		// 			}
+		// 		} else {
+		// 			softShadowColor += color; // Fully lit if no shadow
+		// 		}
+		// 	}
+
+		// 	color = softShadowColor / float(numShadowRays); // Average the colors
+		// }
+
+	// Alt attempt
+		// glm::vec3 shadows[(int)numRandLight];
+		// glm::vec3 totalShadow = glm::vec3(0);
+		// for (int i = 0; i < numRandLight; i++) {
+		// 	glm::vec2 rvec = glm::diskRand(lightR); // 0 < length(rvec) < r
+		// 	glm::vec3 randLightPos = glm::vec3(lightPos.x+rvec.x, lightPos.y, lightPos.z+rvec.y);
+		// 	color = obj->lighting(randLightPos ,-ray.dir, ray.hit);		//Object's colour
+		// 	glm::vec3 lightVec = (randLightPos) - ray.hit;
+		// 	Ray shadowRay(ray.hit, lightVec);
+		// 	float lightDist = glm::length(lightVec);
+		// 	shadowRay.closestPt(sceneObjects);
+
+		// 	if ((shadowRay.index > -1) && (shadowRay.dist < lightDist)) {
+		// 		SceneObject* shadowObj = sceneObjects[shadowRay.index];
+		// 		if (shadowObj->isTransparent() || shadowObj->isRefractive()) {
+		// 			totalShadow += 0.4f * obj->getColor();	//Lighter for transparent and refractive
+		// 		} else {
+		// 			totalShadow += 0.2f * obj->getColor();;
+		// 		}
+		// 	} else {
+		// 		totalShadow += color;
+		// 	}
+		// }
+		// color = totalShadow / numRandLight;
+
+
+// Another attempt
+		glm::vec3 totalShadCol = glm::vec3(0);
+		for (int i = 0; i < numRandLight; i++) {
+			glm::vec2 rvec = glm::diskRand(lightR); // 0 < length(rvec) < r
+			glm::vec3 randLightPos (lightPos.x+rvec.x, lightPos.y, lightPos.z+rvec.y);
+
+			
+			glm::vec3 lightVec = randLightPos - ray.hit;
+			Ray shadowRay(ray.hit, lightVec);
+			float lightDist = glm::length(lightVec);
+			shadowRay.closestPt(sceneObjects);
+
+			if ((shadowRay.index > -1) && (shadowRay.dist < lightDist)) {
+				SceneObject* shadowObj = sceneObjects[shadowRay.index];
+				if (shadowObj->isTransparent() || shadowObj->isRefractive()) {
+					totalShadCol += 0.4f * obj->getColor();	//Lighter for transparent and refractive
+				} else {
+					totalShadCol += 0.2f * obj->getColor();
+				}
+			} else {
+				totalShadCol += obj->lighting(randLightPos ,-ray.dir, ray.hit);		//Object's colour
+			}
+			
+		}
+		color = totalShadCol / numRandLight;
+	
+	}
+
+
+
+	// glm::vec3 totalShadow = glm::vec3(0);
+	// for (int i = 0; i < numRandLight; i++) {
+	// 	totalShadow += shadows[i];
+	// }
+	// color = totalShadow/numRandLight;
+
+	// Ray shadowRay(ray.hit, lightVec);
+
+	// float lightDist = glm::length(lightVec);
+
+	//TODO Loop to get mult random lights & then average
+
+	// loop thru 20ish times 
+;
+	//A random 2D vector inside a circular area of radius “r”
+	
+
+	
 
 	// Handle reflection
 	if (obj->isReflective() && step < MAX_STEPS) {
@@ -308,7 +425,7 @@ void loadChessBoard() {
 }
 
 void loadMirror() {
-	Plane *mirror = new Plane(glm::vec3(-60.0, -20.0, -250.0), glm::vec3(30.0, -20.0, -300.0), glm::vec3(30.0, 25.0, -290.0), glm::vec3(-60.0, 25.0, -240.0));
+	Plane *mirror = new Plane(glm::vec3(-60.0, -20.0, -200.0), glm::vec3(30.0, -20.0, -250.0), glm::vec3(30.0, 25.0, -240.0), glm::vec3(-60.0, 25.0, -190.0));
 	mirror->setColor(glm::vec3(0.1, 0.1, 0.1));
 	mirror->setReflectivity(true, 1.0);
 	// mirror->setSpecularity(false);
@@ -317,7 +434,7 @@ void loadMirror() {
 }
 
 void loadCupAndSaucer() {
-	Cylinder *cylinder1 = new Cylinder(glm::vec3(-5.0, -15.0, -115.0), 2.0, 5.0);
+	Cylinder *cylinder1 = new Cylinder(glm::vec3(0.0, -15.0, -125.0), 2.0, 5.0);
 	cylinder1->setColor(glm::vec3(0.9, 0.9, 1));
 	cylinder1->setTransparency(true, 0.5);
 	sceneObjects.push_back(cylinder1);
@@ -365,14 +482,14 @@ void loadHourGlass() {
 }
 
 void loadCrystalBall() {
-	Sphere *glassSphere = new Sphere(glm::vec3(-15.0, -2.0, -150.0), 5.0);
+	Sphere *glassSphere = new Sphere(glm::vec3(-15.0, -2.0, -115.0), 5.0);
 	glassSphere->setColor(glm::vec3(0.0, 0.0, 0.0));
     glassSphere->setReflectivity(true, 0.1f);         // Low reflectivity
     glassSphere->setRefractivity(true, 1.0, 1.5);   // High refractivity, with refractive index 1.5
     // glassSphere->setTransparency(true, 0.8);         // High transparency
 	sceneObjects.push_back(glassSphere);
 
-	Cone *coneBase = new Cone(glm::vec3(-15.0, -15.0, -150.0), 5.0, 10.0);
+	Cone *coneBase = new Cone(glm::vec3(-15.0, -15.0, -115.0), 5.0, 10.0);
 	coneBase->setColor(glm::vec3(1.0, 0.0, 1.0));
 	// coneBase->setTransparency(true, 0.9);
 	sceneObjects.push_back(coneBase);
@@ -381,18 +498,18 @@ void loadCrystalBall() {
 
 
 void loadGlobe() {
-	Sphere *sphere1 = new Sphere(glm::vec3(10.0, -5.0, -190.0), 5.0);
+	Sphere *sphere1 = new Sphere(glm::vec3(10.0, -5.0, -140.0), 5.0);
 	sphere1->setColor(glm::vec3(0.25, 0.88, 0.82));
 	// sphere1->setTransparency(true, 0.5);
 	sceneObjects.push_back(sphere1);
 
-	Cylinder *cylinder = new Cylinder(glm::vec3(10.0, -15.0, -190.0), 5.0, 5.0);
+	Cylinder *cylinder = new Cylinder(glm::vec3(10.0, -15.0, -140.0), 5.0, 5.0);
 	cylinder->setColor(glm::vec3(0, 0, 0));
 	sceneObjects.push_back(cylinder);
 }
 
 void loadOtherThings() {
-	Sphere *bigShinySphere = new Sphere(glm::vec3(40.0, -15.0, -240.0), 20.0);
+	Sphere *bigShinySphere = new Sphere(glm::vec3(30.0, -15.0, -180.0), 15.0);
 	bigShinySphere->setColor(glm::vec3(0, 0, 0));
 	// sphere1->setSpecularity(false);
 	bigShinySphere->setReflectivity(true, 0.8);
@@ -402,7 +519,7 @@ void loadOtherThings() {
 	// tallPole->setColor(glm::vec3(0.5, 0.5, 0.5));
 	// sceneObjects.push_back(tallPole);
 
-	Cylinder *smallCylinder = new Cylinder(glm::vec3(-15.0, -7.0, -150.0), 5.0, 2.0);
+	Cylinder *smallCylinder = new Cylinder(glm::vec3(-15.0, -7.0, -115.0), 5.0, 2.0);
 	smallCylinder->setColor(glm::vec3(1.0, 0.5, 1.0));
 	sceneObjects.push_back(smallCylinder);
 }
@@ -479,7 +596,7 @@ void display()
 				col += trace(ray, 1); //Trace the primary ray and get the colour value
 			} else {
 				// Adaptive anti-aliasing
-            	col += adaptiveSample(xp, yp, cellX, cellY, numRecursions, 0.1f, eye);
+            	col += adaptiveSample(xp, yp, cellX, cellY, numRecursions, colorThreshold, eye);
 			}
 
 			glColor3f(col.r, col.g, col.b);
