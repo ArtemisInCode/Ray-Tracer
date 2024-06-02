@@ -8,12 +8,16 @@
 
 #ifndef H_CYLINDER
 #define H_CYLINDER
-
 #include <glm/glm.hpp>
 #include "SceneObject.h"
 
+/**
+ * Defines a simple Cylinder located at 'center'
+ * with the specified radius and height
+ */
 class Cylinder : public SceneObject
 {
+
 private:
     glm::vec3 baseCenter;
     float radius;
@@ -21,9 +25,11 @@ private:
 
 public:
     Cylinder() {};
+    
     Cylinder(glm::vec3 base, float r, float h) : baseCenter(base), radius(r), height(h) {}
 
     float intersect(glm::vec3 p0, glm::vec3 dir);
+    
     glm::vec3 normal(glm::vec3 p);
 };
 

@@ -42,7 +42,7 @@ float Cylinder::intersect(glm::vec3 p0, glm::vec3 dir) {
         }
     }
 
-    // Check for intersection with the top cap
+    // Check for intersection with cap
     float tCap = (baseCenter.y + height - p0.y) / dir.y;
     glm::vec3 pCap = p0 + tCap * dir;
     if (glm::distance(glm::vec2(pCap.x, pCap.z), glm::vec2(baseCenter.x, baseCenter.z)) <= radius && tCap > 0) {
@@ -55,7 +55,7 @@ float Cylinder::intersect(glm::vec3 p0, glm::vec3 dir) {
 }
 
 glm::vec3 Cylinder::normal(glm::vec3 p) {
-    // If the point is on the cap, return the normal pointing up
+    // If point is on cap, return the normal pointing up
     if (p.y >= baseCenter.y + height - 0.001) {
         return glm::vec3(0, 1, 0);
     }

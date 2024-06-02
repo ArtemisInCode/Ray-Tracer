@@ -1,15 +1,9 @@
 /*----------------------------------------------------------
-
 * COSC363  Ray Tracer
-
 *
-
 *  The cone class
-
 *  This is a subclass of SceneObject, and hence implements the
-
 *  methods intersect() and normal().
-
 -------------------------------------------------------------*/
 
 #include "Cone.h"
@@ -46,9 +40,6 @@ float Cone::intersect(glm::vec3 p0, glm::vec3 dir)
     if (t2 > 0 && hit2.y >= center.y && hit2.y <= center.y + height) {
         return t2;
     }
-    // For double cones just - but need to get height
-    // if (t1 > 0) return t1;
-    // if (t2 > 0) return t2;
 
     return -1.0;  // No valid intersection within the cone bounds
 }

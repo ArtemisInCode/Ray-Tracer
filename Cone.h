@@ -1,15 +1,9 @@
 /*----------------------------------------------------------
-
 * COSC363  Ray Tracer
-
 *
-
 *  The cone class
-
 *  This is a subclass of SceneObject, and hence implements the
-
 *  methods intersect() and normal().
-
 -------------------------------------------------------------*/
 
 #ifndef H_CONE
