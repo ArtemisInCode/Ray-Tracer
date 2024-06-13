@@ -2,9 +2,6 @@
 * COSC 363  Computer Graphics
 * Department of Computer Science and Software Engineering, University of Canterbury.
 *
-* Artemis Hingston
-* irh20		83986198
-* Assignment 2
 * See Report for details.
 *===============================================================================
 */
