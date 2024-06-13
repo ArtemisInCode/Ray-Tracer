@@ -1,6 +1,5 @@
 /*--------------------------------------------------------------
 * COSC363  Ray Tracer
-* CSSE, University of Canterbury.
 *
 *  The SceneObject class
 *  This is a generic type for storing objects in the scene.
